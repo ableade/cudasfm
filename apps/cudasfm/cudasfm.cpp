@@ -13,7 +13,7 @@
 #include <gflags/gflags.h>
 
 using std::pair;
-using std::cout;
+using std::cerr;
 using std::vector;
 using std::endl;
 using std::string;
@@ -25,16 +25,15 @@ DEFINE_int32(max_image_size, 700, "If resizing, this is the max width to use for
 DEFINE_string(feature_type, "ORB", "Feature detection algorithm to use. Choose from SIFT, SURF, ORB");
 
 
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     string solverFlags = "-logtostderr";
     google::InitGoogleLogging(solverFlags.c_str());
-#if 1
+
     string cameraCalibrationFile;
     if (argc < 2)
     {
-        cout << "Program usage: <flight session directory> optional -- <camera calibration file>" << endl;
+        cerr << "Program usage: <flight session directory> optional -- <camera calibration file>" << endl;
         exit(1);
     }
     FlightSession flight;
@@ -45,7 +44,7 @@ int main(int argc, char *argv[])
     if (argc > 3) {
         //A candidate file was provided 
         const auto candidateFile = argv[3];
-        cout << "Using candidate file " << candidateFile << std::endl;
+        cerr << "Using candidate file " << candidateFile << std::endl;
         shoMatcher.getCandidateMatchesFromFile(candidateFile);
     }
     else {
@@ -55,15 +54,7 @@ int main(int argc, char *argv[])
     shoMatcher.extractFeatures(true);
     shoMatcher.runRobustFeatureMatching();
     //******End matching pipeline******
-#if 1
-    string image1 = "0058_SONY.jpg";
-    string image2 = "0061_SONY.jpg";
-#endif
 
-#if 0
-    string image1 = "resized_IMG_2889.jpg";
-    string image2 = "resized_IMG_2891.jpg";
-#endif
     //***Begin tracking pipeline *****
     ShoTracker tracker(flight, shoMatcher.getCandidateImages());
     vector<pair<ImageFeatureNode, ImageFeatureNode>> featureNodes;
@@ -71,13 +62,13 @@ int main(int argc, char *argv[])
     tracker.createFeatureNodes(featureNodes, featureProps);
     tracker.createTracks(featureNodes);
     auto tracksGraph = tracker.buildTracksGraph(featureProps);
-    cout << "Created tracks graph " << endl;
-    cout << "Number of vertices is " << tracksGraph.m_vertices.size() << endl;
-    cout << "Number of edges is " << tracksGraph.m_edges.size() << endl;
+    cerr << "Created tracks graph " << endl;
     auto commonTracks = tracker.commonTracks(tracksGraph);
+    //*****End tracking pipeline *********
+
+
     Reconstructor reconstructor(flight, tracksGraph);
     reconstructor.runIncrementalReconstruction(tracker);
-    cout << "Finished incremental runIncrementalReconstructionreconstruction \n\n";
 
-#endif
+    cerr << "Finished incremental runIncrementalReconstructionreconstruction \n\n";
 }
