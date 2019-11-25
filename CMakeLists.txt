@@ -1,7 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set (GCC_COMPILE_FLAGS "--std=c++17 -ggdb")
 project(cudasfm)
 include(ExternalProject)
 set(LIB_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/LIB)
@@ -31,19 +30,6 @@ ELSE()
     -fno-strict-aliasing
   )
 ENDIF()
-
-if (FALSE)
-externalproject_add(mve
-    GIT_REPOSITORY  https://github.com/ableade/shomagick.git
-    GIT_TAG         cmake
-    UPDATE_COMMAND  ""
-    SOURCE_DIR      ${LIB_DIRECTORY}/shomagick
-    CONFIGURE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    INSTALL_COMMAND ""                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ND ""
-)
-add_subdirectory(${LIB_DIRECTORY}/shomagick)
-endif()
 
 find_package(Shomagick REQUIRED)
 add_subdirectory(apps)
