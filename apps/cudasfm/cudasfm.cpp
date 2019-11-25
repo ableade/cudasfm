@@ -9,6 +9,7 @@
 #include "shomatcher.hpp"
 #include "shotracking.h"
 #include "reconstructor.h"
+#include "reconstructabilityscores.h"
 #include <gflags/gflags.h>
 
 using std::pair;
@@ -19,7 +20,9 @@ using std::map;
 
 DEFINE_bool(resize, false, "Choose whether to resize images before feature extraction");
 DEFINE_int32(max_image_size, FEATURE_PROCESS_SIZE, "If resizing, this is the max width to use for resizing");
-DEFINE_string(feature_type, "HAHOG", "Feature detection algorithm to use. Choose from SIFT, SURF, ORB, HAHOG, the default is ORB");
+DEFINE_string(feature_type, "SURF", "Feature detection algorithm to use. Choose from SIFT, SURF, ORB, HAHOG, the default is ORB");
+DEFINE_string(reconstruction_score, "matchescount", "Scoring metric to sort image pairs");
+
 
 
 int main(int argc, char* argv[])
@@ -67,7 +70,7 @@ int main(int argc, char* argv[])
         shoMatcher.getCandidateMatchesFromFile(candidateFile);
     }
     else {
-        double range = 0.000359;
+        double range = 0.00359;
         shoMatcher.getCandidateMatchesUsingSpatialSearch(range);
     }
     shoMatcher.extractFeatures();
@@ -78,12 +81,22 @@ int main(int argc, char* argv[])
     ShoTracker tracker(flight, shoMatcher.getCandidateImages());
     auto tracksGraph = tracker.buildTracksGraph();
     cerr << "Created tracks graph " << "\n";
-    auto commonTracks = tracker.commonTracks(tracksGraph);
     //*****End tracking pipeline *********
 
+    Reconstructor<RotationOnlyReconstructabilityScore> rotationOnlyReconstructor{ flight, tracksGraph };
+    Reconstructor<SnavelyReconstructionabilityScore> snavelyReconstructor{ flight, tracksGraph };
+    Reconstructor<MatchesCountReconstructabilityScore> matchesCountReconstructor{ flight, tracksGraph };
 
-    Reconstructor reconstructor(flight, tracksGraph);
-    reconstructor.runIncrementalReconstruction(tracker);
+  
+    if (FLAGS_reconstruction_score == "matchescount") {
+        matchesCountReconstructor.runIncrementalReconstruction(tracker);
+    }
+    else if (FLAGS_reconstruction_score == "snavely") {
+        snavelyReconstructor.runIncrementalReconstruction(tracker);
+    }
+    else {
+        rotationOnlyReconstructor.runIncrementalReconstruction(tracker);
+    }
 
     cerr << "Finished incremental runIncrementalReconstructionreconstruction \n\n";
 }
