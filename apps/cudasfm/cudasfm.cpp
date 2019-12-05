@@ -18,12 +18,32 @@ using std::vector;
 using std::string;
 using std::map;
 
-DEFINE_bool(resize, false, "Choose whether to resize images before feature extraction");
-DEFINE_int32(max_image_size, FEATURE_PROCESS_SIZE, "If resizing, this is the max width to use for resizing");
-DEFINE_string(feature_type, "SURF", "Feature detection algorithm to use. Choose from SIFT, SURF, ORB, HAHOG, the default is ORB");
-DEFINE_string(reconstruction_score, "matchescount", "Scoring metric to sort image pairs");
-
-
+DEFINE_bool(
+    resize, 
+    false, 
+    "Choose whether to resize images before feature extraction, Default is False"
+);
+DEFINE_int32(
+    max_image_size, 
+    FEATURE_PROCESS_SIZE, 
+    "If resizing, this is the max width to use for resizing, Defaults to 2500"
+);
+DEFINE_string(
+    feature_type, 
+    "SURF", 
+    "Feature detection algorithm to use. Choose from SIFT, SURF, ORB, HAHOG, \
+    the default is ORB"
+);
+DEFINE_string(
+    reconstruction_score, 
+    "matchescount", 
+    "Scoring metric to sort image pairs"
+);
+DEFINE_double(
+    knn_ratio,
+    0.25,
+    "Choose a percentage of the dataset for the knn range. Default is 0.25"
+);
 
 int main(int argc, char* argv[])
 {
@@ -70,8 +90,8 @@ int main(int argc, char* argv[])
         shoMatcher.getCandidateMatchesFromFile(candidateFile);
     }
     else {
-        double range = 0.00359;
-        shoMatcher.getCandidateMatchesUsingSpatialSearch(range);
+        int k = FLAGS_knn_ratio * flight.getImageSet().size();
+        shoMatcher.getCandidateMatchesUsingKNNSearch(k);
     }
     shoMatcher.extractFeatures();
     shoMatcher.runRobustFeatureMatching();
