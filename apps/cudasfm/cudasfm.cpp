@@ -11,6 +11,7 @@
 #include "reconstructor.h"
 #include "reconstructabilityscores.h"
 #include <gflags/gflags.h>
+#include <chrono>
 
 using std::pair;
 using std::cerr;
@@ -30,9 +31,9 @@ DEFINE_int32(
 );
 DEFINE_string(
     feature_type, 
-    "SURF", 
+    "HAHOG", 
     "Feature detection algorithm to use. Choose from SIFT, SURF, ORB, HAHOG, \
-    the default is ORB"
+    the default is HAHOG"
 );
 DEFINE_string(
     reconstruction_score, 
@@ -41,8 +42,23 @@ DEFINE_string(
 );
 DEFINE_double(
     knn_ratio,
-    0.25,
+    0.45,
     "Choose a percentage of the dataset for the knn range. Default is 0.25"
+);
+DEFINE_string(
+    image_1,
+    "",
+    "First image to use in bootsrapping reconstruction"
+);
+DEFINE_string(
+    image_2,
+    "",
+    "Second image to use in bootsrapping reconstruction"
+);
+DEFINE_bool(
+    showInitialCameras,
+    false,
+    "Choose whether to plot and initial camera positions before full bundle adjustment process"
 );
 
 int main(int argc, char* argv[])
@@ -82,6 +98,10 @@ int main(int argc, char* argv[])
     }
     ShoMatcher shoMatcher(flight, extractionSize, featureType);
 
+
+    if (FLAGS_showInitialCameras) {
+        
+    }
     //**** Begin Matching Pipeline ******
     if (argc > 3) {
         //A candidate file was provided 
@@ -93,7 +113,11 @@ int main(int argc, char* argv[])
         int k = FLAGS_knn_ratio * flight.getImageSet().size();
         shoMatcher.getCandidateMatchesUsingKNNSearch(k);
     }
+    auto featureExtractionStartTime = std::chrono::high_resolution_clock::now();
     shoMatcher.extractFeatures();
+    auto featureExtractionEndTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(featureExtractionStartTime - featureExtractionEndTime);
+    std::cout << "Time taken for feature extraction: " << duration.count() << " milliseconds" << std::endl;
     shoMatcher.runRobustFeatureMatching();
     //******End matching pipeline******
 
@@ -103,9 +127,10 @@ int main(int argc, char* argv[])
     cerr << "Created tracks graph " << "\n";
     //*****End tracking pipeline *********
 
-    Reconstructor<RotationOnlyReconstructabilityScore> rotationOnlyReconstructor{ flight, tracksGraph };
-    Reconstructor<SnavelyReconstructionabilityScore> snavelyReconstructor{ flight, tracksGraph };
-    Reconstructor<MatchesCountReconstructabilityScore> matchesCountReconstructor{ flight, tracksGraph };
+    auto bootstrapPair = make_pair(FLAGS_image_1, FLAGS_image_2);
+    Reconstructor<RotationOnlyReconstructabilityScore> rotationOnlyReconstructor{ flight, tracksGraph, bootstrapPair};
+    Reconstructor<SnavelyReconstructionabilityScore> snavelyReconstructor{ flight, tracksGraph, bootstrapPair };
+    Reconstructor<MatchesCountReconstructabilityScore> matchesCountReconstructor{ flight, tracksGraph, bootstrapPair };
 
   
     if (FLAGS_reconstruction_score == "matchescount") {
