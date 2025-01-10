@@ -62,6 +62,11 @@ DEFINE_bool(
     false,
     "Choose whether to plot and show initial camera positions before full bundle adjustment process"
 );
+DEFINE_double(
+    outlier_threshold,
+    BUNDLE_OUTLIER_THRESHOLD,
+    "File containing candidate matches"
+);
 
 int main(int argc, char* argv[])
 {
@@ -102,8 +107,9 @@ int main(int argc, char* argv[])
 
 
     if (FLAGS_showInitialCameras) {
-
+        std::cerr << "Initial camera positions is not implemented yet" << std::endl;
     }
+    
     //**** Begin Matching Pipeline ******
     if (argc > 3) {
         //A candidate file was provided 
@@ -135,9 +141,9 @@ int main(int argc, char* argv[])
     //*****End tracking pipeline *********
 
     auto bootstrapPair = make_pair(FLAGS_image_1, FLAGS_image_2);
-    Reconstructor<RotationOnlyReconstructabilityScore> rotationOnlyReconstructor{make_shared<FlightSession>(flight), tracksGraph, bootstrapPair};
-    Reconstructor<SnavelyReconstructionabilityScore> snavelyReconstructor{make_shared<FlightSession>(flight), tracksGraph, bootstrapPair};
-    Reconstructor<MatchesCountReconstructabilityScore> matchesCountReconstructor{make_shared<FlightSession>(flight), tracksGraph, bootstrapPair};
+    Reconstructor<RotationOnlyReconstructabilityScore> rotationOnlyReconstructor{make_shared<FlightSession>(flight), tracksGraph, bootstrapPair, FLAGS_outlier_threshold};
+    Reconstructor<SnavelyReconstructionabilityScore> snavelyReconstructor{make_shared<FlightSession>(flight), tracksGraph, bootstrapPair, FLAGS_outlier_threshold};
+    Reconstructor<MatchesCountReconstructabilityScore> matchesCountReconstructor{make_shared<FlightSession>(flight), tracksGraph, bootstrapPair, FLAGS_outlier_threshold};
 
 
     if (FLAGS_reconstruction_score == "matchescount") {

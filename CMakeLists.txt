@@ -30,6 +30,8 @@ ELSE()
     -fno-strict-aliasing
   )
 ENDIF()
-
+find_package (CUDA)
+find_package(gflags REQUIRED)
+find_package(GDAL REQUIRED)
 find_package(Shomagick REQUIRED)
 add_subdirectory(apps)
