@@ -25,9 +25,9 @@ else()
 	#add_executable(cudasfm cudasfm.cpp)
 endif (CUDA_FOUND)
 target_include_directories(cudasfm PRIVATE ${SHOMAGICK_INCLUDE_DIRS})
-target_link_libraries(cudasfm ${SHOMAGICK_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(cudasfm ${SHOMAGICK_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(cudasfm ${GFLAGS_LIBRARIES})
-
+target_link_directories(cudasfm PRIVATE ${ADDITIONAL_LINK_DIRECTORIES})
 
 get_target_property(LINKED_LIBS cudasfm LINK_LIBRARIES)
 message(STATUS "Libraries linked to my_program: ${LINKED_LIBS}")
